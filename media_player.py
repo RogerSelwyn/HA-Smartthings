@@ -2,23 +2,79 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Any
-
-from pysmartthings import Attribute, Capability, Category, Command, SmartThings
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     RepeatMode,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
+from pysmartthings import (
+    Attribute,
+    Capability,
+    Category,
+    Command,
+    DeviceEvent,
+    SmartThings,
+)
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
 from .entity import SmartThingsEntity
+
+
+class SourceType(StrEnum):
+    """ "Source type."""
+
+    EXTERNAL = "external"
+    APP = "app"
+    TV = "tv"
+    NONE = "none"
+
+
+STD_APP_LIST = {
+    "org.tizen.browser": "Tizen Browser",
+    "org.tizen.netflix-app": "Netflix",
+    "9Ur5IzDKqV.TizenYouTube": "YouTube",
+    "MCmYXNxgcu.DisneyPlus": "Disney+",
+    "4ovn894vo9.Facebook": "Facebook",
+    "yu1NM3vHsU.DAZN": "DAZN",
+    "rJeHak5zRg.Spotify": "Spotify",
+    "kIciSQlYEM.plex": "Plex",
+    "org.tizen.primevideo": "Prime",
+    "DqEoaplKlw.bbchybrid": "BBC iPlayer",
+    "OEvCiupaFR.ITVHub": "ITV Hub",
+    "com.samsung.tv.ariavideo": "Apple TV",
+    "vbUQClczfR.Wuakitv": "Rakuten TV",
+    "pIaMf8YZyZ.whiteLabelTal": "Discovery+",
+    "AQKO41xyKP.AmazonAlexa": "Alexa",
+    "OCaxbgg9v6.chfourctv": "All 4",
+    "EkzyZtmneG.My5": "My5",
+    "com.samsung.tv.samsunghealth": "Samsung Health",
+    "com.samsung.tv.iotdashboard": "SmartThings",
+    "GR7TWEBh5d.BBCSounds": "BBC Sounds",
+    "org.tizen.apple.applemusic": "Apple Music",
+    "1Qb6IoAcGC.NowTV": "NOW",
+    "com.samsung.tv.gallery": "Gallery",
+    "X1pKpFCiUu.PlutoTV": "Pluto TV",
+    "yL49PNFmjW.PromotionApp": "Samsung Promotion",
+    "EJZZ9Mr6D2.emanual": "eManual",
+    "gz3DMB1OMy.DCHTVlive": "Digital Concert Hall",
+    "AkhP5nCr24.GoogleAssistant": "Explore Google Assistant",
+    "VQr0RGkyS9.UKTVPlay": "UKTV Play",
+    "FHl9B04ug2.ITV": "BritBox",
+    "9FhM0cODbY.TikTokTV": "TikTok",
+    "com.samsung.tv.csfs": "Smart TV",
+    "com.samsung.tv.searchall": "Smart TV Search",
+    "org.tizen.epg": "Tizen EPG",
+}
 
 MEDIA_PLAYER_CAPABILITIES = (
     Capability.AUDIO_MUTE,
@@ -89,7 +145,9 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 Capability.MEDIA_PLAYBACK_REPEAT,
                 Capability.MEDIA_PLAYBACK_SHUFFLE,
                 Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE,
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
                 Capability.SWITCH,
+                Capability.TV_CHANNEL,
             },
         )
         self._attr_supported_features = self._determine_features()
@@ -97,6 +155,8 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             device.device.components[MAIN].user_category
             or device.device.components[MAIN].manufacturer_category,
         )
+        self._media_content_type = None
+        self._samsung_source_type = self._source_type_initial()
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
         flags = (
@@ -129,6 +189,15 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         if self.supports_capability(Capability.MEDIA_PLAYBACK_REPEAT):
             flags |= MediaPlayerEntityFeature.REPEAT_SET
         return flags
+
+    def _update_handler(self, event: DeviceEvent) -> None:
+        self._internal_state[event.capability][event.attribute].value = event.value
+        self._internal_state[event.capability][event.attribute].data = event.data
+        self._internal_state[event.capability][
+            event.attribute
+        ].timestamp = dt_util.now()
+        self._samsung_source_type = self._source_type_update(event)
+        self._handle_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the media player off."""
@@ -211,6 +280,19 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select source."""
+
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            sources = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+            )
+            for item in sources:
+                if item["name"] == source:
+                    source = item["id"]
+
+        if source == "dtv":
+            source = "digitalTv"
+
         await self.execute_device_command(
             Capability.MEDIA_INPUT_SOURCE,
             Command.SET_INPUT_SOURCE,
@@ -247,6 +329,50 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         ):
             return None
         return track_data.get("title", None)
+
+    @property
+    def media_channel(self) -> str | None:
+        """Channel of current playing media."""
+        if self._samsung_source_type in [SourceType.APP, SourceType.TV]:
+            channel_name = self.get_attribute_value(
+                Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME
+            )
+            return STD_APP_LIST.get(channel_name, channel_name)
+
+        return None
+
+    @property
+    def app_id(self) -> str | None:
+        """app id of current playing media."""
+        # print(
+        #     f"app_id - is_app:{self._samsung_source_type} - Channel Name:{self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)} - {self.get_attribute_timestamp(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)}"
+        # )
+        if self._samsung_source_type == SourceType.APP:
+            return self.get_attribute_value(
+                Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME
+            )
+
+        return None
+
+    @property
+    def app_name(self) -> str | None:
+        """app name of current playing media."""
+        if self._samsung_source_type == SourceType.APP:
+            channel_name = self.get_attribute_value(
+                Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME
+            )
+            return STD_APP_LIST.get(channel_name, channel_name)
+
+        return None
+
+    @property
+    def media_content_type(self) -> str | None:
+        """app id of current playing media."""
+        # print(f"media_content_type - is_app:{self._samsung_source_type}")
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            return self._media_content_type
+
+        return None
 
     @property
     def media_artist(self) -> str | None:
@@ -311,6 +437,20 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Input source."""
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            source = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
+            )
+
+            sources = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+            )
+            for item in sources:
+                if item["id"] == source:
+                    return item["name"]
+            return source
+
         if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
             return self.get_attribute_value(
                 Capability.MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
@@ -324,6 +464,13 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list[str] | None:
         """List of input sources."""
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            sources = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+            )
+            return [item["name"] for item in sources]
+
         if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
             return self.get_attribute_value(
                 Capability.MEDIA_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
@@ -357,3 +504,108 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 )
             ]
         return None
+
+    def _source_type_initial(self):
+        # print(
+        #     f"Switch:{self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)} - {self.get_attribute_timestamp(Capability.SWITCH, Attribute.SWITCH)}"
+        # )
+        # print(
+        #     f"Samsung Source:{self.get_attribute_value(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE)} - {self.get_attribute_timestamp(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE)}"
+        # )
+        # print(
+        #     f"Channel Name:{self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)} - {self.get_attribute_timestamp(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)}"
+        # )
+        # print(
+        #     f"Channel:{self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL)} - {self.get_attribute_timestamp(Capability.TV_CHANNEL, Attribute.TV_CHANNEL)}"
+        # )
+
+        if not self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            return SourceType.NONE
+
+        if (
+            self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
+            )
+            and self.get_attribute_timestamp(
+                Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME
+            )
+            < self.get_attribute_timestamp(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
+            )
+            != "dtv"
+        ):
+            # print("Ext")
+            self._media_content_type = None
+            return SourceType.EXTERNAL
+
+        if (
+            self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)
+            != ""
+            and self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL)
+            == ""
+        ):
+            # print("App")
+            self._media_content_type = MediaType.APP
+            return SourceType.APP
+        # print("TV")
+        self._media_content_type = MediaType.TVSHOW
+        return SourceType.TV
+
+    def _source_type_update(self, event: DeviceEvent):
+        # print(f"---> {event.attribute} - {event.value}")
+        # print(
+        #     f"Switch:{self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)} - {self.get_attribute_timestamp(Capability.SWITCH, Attribute.SWITCH)}"
+        # )
+        # print(
+        #     f"Samsung Source:{self.get_attribute_value(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE)} - {self.get_attribute_timestamp(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE)}"
+        # )
+        # print(
+        #     f"Channel Name:{self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)} - {self.get_attribute_timestamp(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)}"
+        # )
+        # print(
+        #     f"Channel:{self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL)} - {self.get_attribute_timestamp(Capability.TV_CHANNEL, Attribute.TV_CHANNEL)}"
+        # )
+
+        if not self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            return SourceType.NONE
+
+        if (
+            event.attribute == Attribute.INPUT_SOURCE
+            and self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
+            )
+            != "dtv"
+        ):
+            # print("Ext")
+            self._media_content_type = None
+            return SourceType.EXTERNAL
+
+        if event.attribute == Attribute.TV_CHANNEL and self.get_attribute_value(
+            Capability.TV_CHANNEL, Attribute.TV_CHANNEL
+        ):
+            # print("TV")
+            self._media_content_type = MediaType.TVSHOW
+            return SourceType.TV
+
+        if event.attribute == Attribute.TV_CHANNEL_NAME:
+            channel_name = self.get_attribute_value(
+                Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME
+            )
+            if " " in channel_name or "." not in channel_name:
+                # print("TV")
+                self._media_content_type = MediaType.TVSHOW
+                return SourceType.TV
+            # print("App")
+            self._media_content_type = MediaType.APP
+            return SourceType.APP
+
+        return self._samsung_source_type
+        # print("TV")
+        # self._media_content_type = MediaType.TVSHOW
+        # return SourceType.TV
+
+    def get_attribute_timestamp(
+        self, capability: Capability, attribute: Attribute
+    ) -> Any:
+        """Get the value of a device attribute."""
+        return self._internal_state[capability][attribute].timestamp
