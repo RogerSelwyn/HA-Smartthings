@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import MAIN, UNIT_MAP
 from .entity import SmartThingsEntity
 
 ATTR_OPERATION_STATE = "operation_state"
@@ -92,7 +92,6 @@ WIND = "wind"
 FAN = "fan"
 WINDFREE = "windFree"
 
-UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -309,7 +308,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.get_attribute_value(
