@@ -109,7 +109,7 @@ HA_REPEAT_MODE_TO_SMARTTHINGS = {v: k for k, v in REPEAT_MODE_TO_HA.items()}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # pylint: disable=unused-argument
     entry: SmartThingsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -126,7 +126,7 @@ async def async_setup_entry(
     )
 
 
-class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
+class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):  # pylint: disable=abstract-method
     """Define a SmartThings media player."""
 
     _attr_name = None
@@ -199,14 +199,14 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         self._samsung_source_type = self._source_type_update(event)
         self._handle_update()
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:  # pylint: disable=unused-argument
         """Turn the media player off."""
         await self.execute_device_command(
             Capability.SWITCH,
             Command.OFF,
         )
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:  # pylint: disable=unused-argument
         """Turn the media player on."""
         await self.execute_device_command(
             Capability.SWITCH,
@@ -344,9 +344,6 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     @property
     def app_id(self) -> str | None:
         """app id of current playing media."""
-        # print(
-        #     f"app_id - is_app:{self._samsung_source_type} - Channel Name:{self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)} - {self.get_attribute_timestamp(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)}"
-        # )
         if self._samsung_source_type == SourceType.APP:
             return self.get_attribute_value(
                 Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME
@@ -506,19 +503,6 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         return None
 
     def _source_type_initial(self):
-        # print(
-        #     f"Switch:{self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)} - {self.get_attribute_timestamp(Capability.SWITCH, Attribute.SWITCH)}"
-        # )
-        # print(
-        #     f"Samsung Source:{self.get_attribute_value(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE)} - {self.get_attribute_timestamp(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE)}"
-        # )
-        # print(
-        #     f"Channel Name:{self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)} - {self.get_attribute_timestamp(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)}"
-        # )
-        # print(
-        #     f"Channel:{self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL)} - {self.get_attribute_timestamp(Capability.TV_CHANNEL, Attribute.TV_CHANNEL)}"
-        # )
-
         if not self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
             return SourceType.NONE
 
@@ -552,20 +536,6 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         return SourceType.TV
 
     def _source_type_update(self, event: DeviceEvent):
-        # print(f"---> {event.attribute} - {event.value}")
-        # print(
-        #     f"Switch:{self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)} - {self.get_attribute_timestamp(Capability.SWITCH, Attribute.SWITCH)}"
-        # )
-        # print(
-        #     f"Samsung Source:{self.get_attribute_value(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE)} - {self.get_attribute_timestamp(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE)}"
-        # )
-        # print(
-        #     f"Channel Name:{self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)} - {self.get_attribute_timestamp(Capability.TV_CHANNEL, Attribute.TV_CHANNEL_NAME)}"
-        # )
-        # print(
-        #     f"Channel:{self.get_attribute_value(Capability.TV_CHANNEL, Attribute.TV_CHANNEL)} - {self.get_attribute_timestamp(Capability.TV_CHANNEL, Attribute.TV_CHANNEL)}"
-        # )
-
         if not self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
             return SourceType.NONE
 
