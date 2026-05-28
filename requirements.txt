@@ -1,1 +1,1 @@
-pysmartthings>=3.7.3
+pysmartthings==3.5.1
