@@ -29,6 +29,7 @@
   "documentation": "https://github.com/RogerSelwyn/HA-Smartthings",
   "integration_type": "hub",
   "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/RogerSelwyn/HA-Smartthings/issues",
   "loggers": ["custom_components.smartthings", "pysmartthings"],
   "quality_scale": "bronze",
   "requirements": ["pysmartthings>=3.7.3"],
