@@ -1,7 +1,5 @@
 """Support for media players through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import Any
 
@@ -28,6 +26,26 @@ from pysmartthings import (
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
 from .entity import SmartThingsEntity
+
+MEDIA_SOURCE_ID_TO_HA_KEY: dict[str, str] = {
+    "AM": "am",
+    "BT": "bluetooth",
+    "CD": "cd",
+    "D.IN": "digital_input",
+    "HDMI": "hdmi",
+    "HDMI1": "hdmi1",
+    "HDMI2": "hdmi2",
+    "HDMI3": "hdmi3",
+    "HDMI4": "hdmi4",
+    "HDMI5": "hdmi5",
+    "HDMI6": "hdmi6",
+    "USB": "usb",
+    "WIFI": "wifi",
+    "digitalTv": "digital_tv",
+    "dtv": "digital_tv",
+    "melon": "melon",
+    "youtube": "youtube",
+}
 
 
 class SourceType(StrEnum):
@@ -130,6 +148,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):  # pylint: d
     """Define a SmartThings media player."""
 
     _attr_name = None
+    _attr_translation_key = "media_player"
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the media_player class."""
@@ -157,6 +176,43 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):  # pylint: d
         )
         self._media_content_type = None
         self._samsung_source_type = self._source_type_initial()
+        self._source_to_smartthings_id: dict[str, str] = {}
+
+    def _update_attr(self) -> None:
+        """Update the attributes."""
+        self._build_source_map()
+
+    def _build_source_map(self) -> None:
+        """Build the source mapping from HA key to SmartThings ID."""
+        raw_sources = self._get_raw_source_list()
+        if not raw_sources:
+            self._source_to_smartthings_id = {}
+            return
+        self._source_to_smartthings_id = {
+            MEDIA_SOURCE_ID_TO_HA_KEY.get(source_id, source_id): source_id
+            for source_id in raw_sources
+        }
+
+    def _get_raw_source_list(self) -> list[str] | None:
+        """Get the raw source list from the device."""
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            sources_map = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+            )
+            if not sources_map:
+                return None
+            return [source["id"] for source in sources_map]
+        if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+            return self.get_attribute_value(
+                Capability.MEDIA_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
+            )
+        if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
+            return self.get_attribute_value(
+                Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES,
+            )
+        return None
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
         flags = (
@@ -182,7 +238,9 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):  # pylint: d
             flags |= (
                 MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
             )
-        if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+        if self.supports_capability(
+            Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE
+        ) or self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
             flags |= MediaPlayerEntityFeature.SELECT_SOURCE
         if self.supports_capability(Capability.MEDIA_PLAYBACK_SHUFFLE):
             flags |= MediaPlayerEntityFeature.SHUFFLE_SET
@@ -281,23 +339,36 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):  # pylint: d
     async def async_select_source(self, source: str) -> None:
         """Select source."""
 
+        # if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+        #     sources = self.get_attribute_value(
+        #         Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+        #         Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+        #     )
+        #     for item in sources:
+        #         if item["name"] == source:
+        #             source = item["id"]
+
+        # if source == "dtv":
+        #     source = "digitalTv"
+
+        # await self.execute_device_command(
+        #     Capability.MEDIA_INPUT_SOURCE,
+        #     Command.SET_INPUT_SOURCE,
+        #     argument=source,
+        # )
+        smartthings_source = self._source_to_smartthings_id.get(source, source)
         if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
-            sources = self.get_attribute_value(
+            await self.execute_device_command(
                 Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
-                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+                Command.SET_INPUT_SOURCE,
+                argument=smartthings_source,
             )
-            for item in sources:
-                if item["name"] == source:
-                    source = item["id"]
-
-        if source == "dtv":
-            source = "digitalTv"
-
-        await self.execute_device_command(
-            Capability.MEDIA_INPUT_SOURCE,
-            Command.SET_INPUT_SOURCE,
-            argument=source,
-        )
+        else:
+            await self.execute_device_command(
+                Capability.MEDIA_INPUT_SOURCE,
+                Command.SET_INPUT_SOURCE,
+                argument=smartthings_source,
+            )
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle mode."""
@@ -434,50 +505,70 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):  # pylint: d
     @property
     def source(self) -> str | None:
         """Input source."""
+        # if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+        #     source = self.get_attribute_value(
+        #         Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
+        #     )
+
+        #     sources = self.get_attribute_value(
+        #         Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+        #         Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+        #     )
+        #     for item in sources:
+        #         if item["id"] == source:
+        #             return item["name"]
+        #     return source
+
+        # if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+        #     return self.get_attribute_value(
+        #         Capability.MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
+        #     )
+        # if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
+        #     return self.get_attribute_value(
+        #         Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE, Attribute.INPUT_SOURCE
+        #     )
+        # return None
         if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
-            source = self.get_attribute_value(
+            raw = self.get_attribute_value(
                 Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
             )
-
-            sources = self.get_attribute_value(
-                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
-                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
-            )
-            for item in sources:
-                if item["id"] == source:
-                    return item["name"]
-            return source
-
-        if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
-            return self.get_attribute_value(
+        elif self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+            raw = self.get_attribute_value(
                 Capability.MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
             )
-        if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
-            return self.get_attribute_value(
+        elif self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
+            raw = self.get_attribute_value(
                 Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE, Attribute.INPUT_SOURCE
             )
-        return None
+        else:
+            raw = None
+        if raw is None:
+            return None
+        return MEDIA_SOURCE_ID_TO_HA_KEY.get(raw, raw)
 
     @property
     def source_list(self) -> list[str] | None:
         """List of input sources."""
-        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
-            sources = self.get_attribute_value(
-                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
-                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
-            )
-            return [item["name"] for item in sources]
+        # if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+        #     sources = self.get_attribute_value(
+        #         Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+        #         Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+        #     )
+        #     return [item["name"] for item in sources]
 
-        if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
-            return self.get_attribute_value(
-                Capability.MEDIA_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
-            )
-        if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
-            return self.get_attribute_value(
-                Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE,
-                Attribute.SUPPORTED_INPUT_SOURCES,
-            )
-        return None
+        # if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+        #     return self.get_attribute_value(
+        #         Capability.MEDIA_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
+        #     )
+        # if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
+        #     return self.get_attribute_value(
+        #         Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE,
+        #         Attribute.SUPPORTED_INPUT_SOURCES,
+        #     )
+        # return None
+        if not self._source_to_smartthings_id:
+            return None
+        return list(self._source_to_smartthings_id)
 
     @property
     def shuffle(self) -> bool | None:
