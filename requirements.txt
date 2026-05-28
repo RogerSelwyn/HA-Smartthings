@@ -1,0 +1,1 @@
+pysmartthings>=3.7.3
