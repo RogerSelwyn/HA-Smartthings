@@ -1,7 +1,7 @@
 {
   "domain": "smartthings",
-  "name": "SmartThings",
-  "codeowners": ["@joostlek"],
+  "name": "SF Smartthings",
+  "codeowners": ["@rogerselwyn"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "dhcp": [
@@ -26,7 +26,7 @@
       "macaddress": "286D97*"
     }
   ],
-  "documentation": "https://www.home-assistant.io/integrations/smartthings",
+  "documentation": "https://github.com/RogerSelwyn/HA-Smartthings",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["pysmartthings"],
