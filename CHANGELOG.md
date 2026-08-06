@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.1.1 (2026/08/06)
+### 🐛 Fixes
+- [Fix invalid units](https://github.com/RogerSelwyn/HA-Smartthings/commit/d6ad05c7805c58bf817be71282afb3ac7f1dfab9) - @RogerSelwyn
+
+### 🧰 Maintenance
+- [Remove deprecated constants](https://github.com/RogerSelwyn/HA-Smartthings/commit/6dd716822bd1c2aafbe3d12314a52eb0655fa887) - @RogerSelwyn
+- [Update workflows](https://github.com/RogerSelwyn/HA-Smartthings/commit/bb52e72542bd1649839691de7c3a103f86b93eed) - @RogerSelwyn
+
+### ⬆️ Dependencies
+- [Add versioning strategy to Dependabot config](https://github.com/RogerSelwyn/HA-Smartthings/commit/caf5817388f43b2d72c98248463c40ad45947ccb) - @RogerSelwyn
+- [Bump HA to 2026.8.0](https://github.com/RogerSelwyn/HA-Smartthings/commit/6f34734f96ee9f0cd715cc54c96c83c660933c5e) - @RogerSelwyn
+
+### 🔖 Release
+- [Release v1.1.1](https://github.com/RogerSelwyn/HA-Smartthings/commit/3d363e3f7580c021e0528562d92a8fa3c011fdf4) - @RogerSelwyn
+
+
+
+
 ## v1.1.0 (2026/05/28)
 ### 🐛 Fixes
 - [Add issue tracker to manifest](https://github.com/RogerSelwyn/HA-Smartthings/commit/4f597ef347b2e3ca835a8493675be4af70443018) - @RogerSelwyn
