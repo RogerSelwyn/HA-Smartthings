@@ -1,7 +1,7 @@
 {
   "name": "SF Smartthings",
   "zip_release": true,
-  "homeassistant": "2026.5.0",
+  "homeassistant": "2026.8.0",
   "content_in_root": false,
   "filename": "smartthings.zip",
   "render_readme": true
