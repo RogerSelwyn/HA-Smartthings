@@ -33,5 +33,5 @@
   "loggers": ["custom_components.smartthings", "pysmartthings"],
   "quality_scale": "bronze",
   "requirements": ["pysmartthings>=3.7.3"],
-  "version": "v1.1.0"
+  "version": "v1.1.1"
 }
