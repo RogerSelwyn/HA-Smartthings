@@ -295,7 +295,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.CARBON_MONOXIDE_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.CARBON_MONOXIDE_LEVEL,
-                native_unit_of_measurement=PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -513,7 +513,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.FINE_DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.FINE_DUST_LEVEL,
-                native_unit_of_measurement=UnitUnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
                 device_class=SensorDeviceClass.PM25,
             )
@@ -1072,7 +1072,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.VERY_FINE_DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.VERY_FINE_DUST_LEVEL,
-                native_unit_of_measurement=UnitUnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM1,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -1185,7 +1185,7 @@ UNITS = {
     "ccf": UnitOfVolume.CENTUM_CUBIC_FEET,
     "lux": LIGHT_LUX,
     "mG": None,
-    "μg/m^3": UnitUnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "μg/m^3": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     "kPa": UnitOfPressure.KPA,
 }
 
