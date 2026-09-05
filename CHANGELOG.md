@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.1.2 (2026/09/05)
+### 🧰 Maintenance
+- [Add pyproject.toml](https://github.com/RogerSelwyn/HA-Smartthings/commit/4e57e7562918ec0451d69b712ec8e1d30b1a014d) - @RogerSelwyn
+- [Remove via_device deprecation warnings](https://github.com/RogerSelwyn/HA-Smartthings/commit/d1df5e961a851f271aa402c13ff3c25673a07bb8) - @RogerSelwyn
+
+### ⬆️ Dependencies
+- [bump ruff from 0.15.4 to 0.16.3](https://github.com/RogerSelwyn/HA-Smartthings/commit/8aa62edcdf85f41d21c264ab31e4bb3d5b1342ea) - @dependabot[bot]
+
+### 🔖 Release
+- [Release v1.1.2](https://github.com/RogerSelwyn/HA-Smartthings/commit/95d8d33c5accbc3861bdd3488a69c114f495b5e9) - @RogerSelwyn
+
+
+
+
 ## v1.1.1 (2026/08/06)
 ### 🐛 Fixes
 - [Fix invalid units](https://github.com/RogerSelwyn/HA-Smartthings/commit/d6ad05c7805c58bf817be71282afb3ac7f1dfab9) - @RogerSelwyn
