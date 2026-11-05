@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.1.3 (2026/11/05)
+### 🧰 Maintenance
+- [Remove linting workflow](https://github.com/RogerSelwyn/HA-Smartthings/commit/d7073039b8260a6b79fa07280de155a6c05ef458) - @RogerSelwyn
+- [Remove deprecations](https://github.com/RogerSelwyn/HA-Smartthings/commit/c24a6679cd6d1a877f5cb3ae20e650c07225577d) - @RogerSelwyn
+
+### ⬆️ Dependencies
+- [update pysmartthings requirement from >=3.7.3 to >=4.0.3](https://github.com/RogerSelwyn/HA-Smartthings/commit/266f08a0cdd2a39764709292c20d289df1d0ae93) - @dependabot[bot]
+- [bump ruff from 0.16.3 to 0.16.9](https://github.com/RogerSelwyn/HA-Smartthings/commit/da9c386e3c9cbcadbc4d3706c0bf6592999aac7e) - @dependabot[bot]
+- [Auto update requirements.txt](https://github.com/RogerSelwyn/HA-Smartthings/commit/e2186065637321cadd96762e3da083c1f394f197) - @actions-user
+- [update pygithub requirement from >=2.9.1 to >=2.10.0](https://github.com/RogerSelwyn/HA-Smartthings/commit/d069d8b80dcfd4cb0bf687718dddfa92e7a22225) - @dependabot[bot]
+- [bump ruff from 0.16.9 to 0.17.3](https://github.com/RogerSelwyn/HA-Smartthings/commit/d6cc81761449edb2284a37286d2494d4488a13a4) - @dependabot[bot]
+- [update pysmartthings requirement from >=3.7.3 to >=4.1.0](https://github.com/RogerSelwyn/HA-Smartthings/commit/6d99ec891d72582df7be3013e7c16166d5ec43ce) - @dependabot[bot]
+- [Auto update requirements.txt](https://github.com/RogerSelwyn/HA-Smartthings/commit/37fb642419bd1370437a25f4b9b321a61a94d3e7) - @actions-user
+- [Update pysmartthings dependency](https://github.com/RogerSelwyn/HA-Smartthings/commit/b7dfddc631c8e57a42bebd60881b04f45dd1f6b6) - @RogerSelwyn
+- [Auto update requirements.txt](https://github.com/RogerSelwyn/HA-Smartthings/commit/4f5b9987bfaa4487d0888b284f705b5c8435e7b3) - @actions-user
+
+### 🔖 Release
+- [Release v1.1.3](https://github.com/RogerSelwyn/HA-Smartthings/commit/44146c74b747786713464ad4c8cd4514bcfa4530) - @RogerSelwyn
+
+
+
+
 ## v1.1.2 (2026/09/05)
 ### 🧰 Maintenance
 - [Add pyproject.toml](https://github.com/RogerSelwyn/HA-Smartthings/commit/4e57e7562918ec0451d69b712ec8e1d30b1a014d) - @RogerSelwyn
