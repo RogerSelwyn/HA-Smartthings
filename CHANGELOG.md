@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.1.4 (2026/11/05)
+### 🐛 Fixes
+- [Fix pysmartthings dependency](https://github.com/RogerSelwyn/HA-Smartthings/commit/09a344a048eef3bbd3c68f7e38e0f670b948f05e) - @RogerSelwyn
+
+### ⬆️ Dependencies
+- [Auto update requirements.txt](https://github.com/RogerSelwyn/HA-Smartthings/commit/882f205bee1228e44f4d45717276497a4180549e) - @actions-user
+
+### 🔖 Release
+- [Release v1.1.4](https://github.com/RogerSelwyn/HA-Smartthings/commit/ba2517cad8f6b2403153f0c608591e825654036e) - @RogerSelwyn
+
+
+
+
 ## v1.1.3 (2026/11/05)
 ### 🧰 Maintenance
 - [Remove linting workflow](https://github.com/RogerSelwyn/HA-Smartthings/commit/d7073039b8260a6b79fa07280de155a6c05ef458) - @RogerSelwyn
