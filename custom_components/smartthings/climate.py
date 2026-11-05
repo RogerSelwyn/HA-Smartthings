@@ -275,7 +275,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
             Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
@@ -332,7 +332,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         ]
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
             return self.get_attribute_value(
@@ -345,7 +345,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.get_attribute_value(
@@ -354,7 +354,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.get_attribute_value(
@@ -363,7 +363,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return None
 
     @property
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         # Offline third party thermostats may not have a unit
         # Since climate always requires a unit, default to Celsius
@@ -494,7 +494,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
             Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
@@ -549,14 +549,14 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.get_attribute_value(
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
         )
 
     @property
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
             Attribute.TEMPERATURE
@@ -744,7 +744,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         )
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
             Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
@@ -762,14 +762,14 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         )
 
     @property
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.get_attribute_value(
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
         )
 
     @property
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
             Attribute.TEMPERATURE
